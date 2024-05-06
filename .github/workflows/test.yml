@@ -3,6 +3,7 @@ on:
   push:
     branches:
     - "v*"
+    - "tests"
   pull_request:
     branches:
     - "*"
