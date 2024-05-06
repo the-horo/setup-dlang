@@ -12,7 +12,26 @@ defaults:
     shell: bash
 
 jobs:
+  verify-index-js-up-to-date:
+    name: Verify that `dist/index.js` is up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: diff-ing dist/index.js
+        env:
+            NODE_OPTIONS: "--openssl-legacy-provider"
+        run: |
+          set -euxo pipefail
+          npm ci
+          npm run build
+          # exclude dist/index.js.map (different on Windows)
+          git diff --stat --exit-code HEAD -- ':!dist/index.js.map'
+
   verify-dmd:
+    needs: verify-index-js-up-to-date
     strategy:
       max-parallel: 5
       fail-fast: false
@@ -44,6 +63,7 @@ jobs:
           dc: ${{ matrix.dc }}
 
   verify-ldc:
+    needs: verify-index-js-up-to-date
     strategy:
       max-parallel: 5
       fail-fast: false
@@ -60,9 +80,9 @@ jobs:
             ldc^3,
             ldc-master,
         ]
-      exclude:
-        # arm64 binaries are available since ldc-1.25.0
-        - { os: macOS-latest, dc: ldc-1.19.0 }
+        exclude:
+          # arm64 binaries are available since ldc-1.25.0
+          - { os: macOS-latest, dc: ldc-1.19.0 }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -71,6 +91,7 @@ jobs:
           dc: ${{ matrix.dc }}
 
   verify-gdmd:
+    needs: verify-index-js-up-to-date
     strategy:
       max-parallel: 5
       fail-fast: false
@@ -86,6 +107,7 @@ jobs:
           dc: ${{ matrix.dc }}
 
   verify-default:
+    needs: verify-index-js-up-to-date
     name: Verify default compiler
     strategy:
       max-parallel: 5
@@ -99,6 +121,7 @@ jobs:
 
   dub:
     name: Verify standalone DUB install
+    needs: verify-index-js-up-to-date
     strategy:
       fail-fast: false
       matrix:
@@ -146,21 +169,3 @@ jobs:
       - name : Compile with dub
         run: |
           cd .github && dub run --single hello.d --compiler=${DC}
-
-  verify-index-js-up-to-date:
-    name: Verify that `dist/index.js` is up to date
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: diff-ing dist/index.js
-        env:
-            NODE_OPTIONS: "--openssl-legacy-provider"
-        run: |
-          set -euxo pipefail
-          npm ci
-          npm run build
-          # exclude dist/index.js.map (different on Windows)
-          git diff --stat --exit-code HEAD -- ':!dist/index.js.map'
