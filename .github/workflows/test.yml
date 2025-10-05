@@ -27,6 +27,20 @@ jobs:
           # exclude dist/index.js.map (different on Windows)
           git diff --stat --exit-code HEAD -- ':!dist/index.js.map'
 
+  debug:
+    runs-on: windows-latest
+    stepts:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/verify-d-compiler
+        with:
+          dc: ${{ matrix.dc }}
+
+      - name: Test that dub is installed by default
+        shell: bash
+        run: |
+          command -v gpg
+          gpg -v
+
   verify-dmd:
     needs: verify-index-js-up-to-date
     strategy:
