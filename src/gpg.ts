@@ -9,7 +9,6 @@ export async function verify(file_path: string, sig_url: string) {
 
     // hack to workaround gpg on windows interaction with paths
     keyring = win_path_to_msys(keyring);
-    sig_path = win_path_to_msys(sig_path);
 
     await exec.exec(
 	'gpg',
