@@ -29,7 +29,7 @@ jobs:
 
   debug:
     runs-on: windows-latest
-    stepts:
+    steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/verify-d-compiler
         with:
